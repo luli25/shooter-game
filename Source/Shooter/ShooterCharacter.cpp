@@ -10,8 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
-#include "Engine/SkeletalMeshSocket.h"
-#include "GenericPlatform/GenericPlatformCrashContext.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
@@ -108,12 +107,30 @@ void AShooterCharacter::FireWeapon()
 		const FVector RotationAxis{ Rotation.GetAxisX() };
 		const FVector End{ Start + RotationAxis * 50'000.0f };
 
+		FVector BeamEndPoint{ End };
+
 		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility);
 
 		if (Hit.bBlockingHit)
 		{
-			DrawDebugLine(GetWorld(), Start, End, FColor::Magenta, false, 2.0f);
-			DrawDebugPoint(GetWorld(), Hit.Location, 5.0f, FColor::Magenta, false, 2.0f);
+			//DrawDebugLine(GetWorld(), Start, End, FColor::Magenta, false, 2.0f);
+			//DrawDebugPoint(GetWorld(), Hit.Location, 5.0f, FColor::Magenta, false, 2.0f);
+
+			BeamEndPoint = Hit.Location;
+
+			if (ImpactParticles)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location);
+			}
+		}
+
+		if (BeamParticles)
+		{
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
+			if (Beam)
+			{
+				Beam->SetVectorParameter(FName("Target"), BeamEndPoint);
+			}
 		}
 	}
 
