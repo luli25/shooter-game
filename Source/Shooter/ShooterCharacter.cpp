@@ -135,13 +135,28 @@ void AShooterCharacter::FireWeapon()
 			if (ScreenTraceHit.bBlockingHit)
 			{
 				BeamEndPoint = ScreenTraceHit.Location;
-				if (ImpactParticles)
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(
-						GetWorld(),
-						ImpactParticles,
-						ScreenTraceHit.Location);
-				}
+			}
+
+			FHitResult WeaponHitTrace;
+			const FVector WeaponTraceStart{ SocketTransform.GetLocation() };
+			const FVector WeaponTraceEnd{ BeamEndPoint };
+			GetWorld()->LineTraceSingleByChannel(
+				WeaponHitTrace,
+				WeaponTraceStart,
+				WeaponTraceEnd,
+				ECollisionChannel::ECC_Visibility);
+
+			if (WeaponHitTrace.bBlockingHit)
+			{
+				BeamEndPoint = WeaponHitTrace.Location;
+			}
+
+			if (ImpactParticles)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(),
+					ImpactParticles,
+					BeamEndPoint);
 			}
 			
 			if (BeamParticles)
@@ -157,40 +172,6 @@ void AShooterCharacter::FireWeapon()
 				}
 			}
 		}
-
-		/*
-		FHitResult Hit;
-		const FVector Start{ SocketTransform.GetLocation() };
-		const FQuat Rotation{ SocketTransform.GetRotation() };
-		const FVector RotationAxis{ Rotation.GetAxisX() };
-		const FVector End{ Start + RotationAxis * 50'000.0f };
-
-		FVector BeamEndPoint{ End };
-
-		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility);
-
-		if (Hit.bBlockingHit)
-		{
-			//DrawDebugLine(GetWorld(), Start, End, FColor::Magenta, false, 2.0f);
-			//DrawDebugPoint(GetWorld(), Hit.Location, 5.0f, FColor::Magenta, false, 2.0f);
-
-			BeamEndPoint = Hit.Location;
-
-			if (ImpactParticles)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location);
-			}
-		}
-
-		if (BeamParticles)
-		{
-			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
-			if (Beam)
-			{
-				Beam->SetVectorParameter(FName("Target"), BeamEndPoint);
-			}
-		}
-		*/
 	}
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
