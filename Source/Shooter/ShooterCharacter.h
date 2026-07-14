@@ -40,6 +40,15 @@ protected:
 	// Called when the fire button is pressed
 	void FireWeapon();
 
+private:
+	void PlayFireSound();
+
+	void SendBullet();
+
+	bool GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation);
+
+	void PlayHipFireMontage();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
