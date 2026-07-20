@@ -40,6 +40,10 @@ protected:
 	// Called when the fire button is pressed
 	void FireWeapon();
 
+	// Aiming functions
+	void AimingButtonPressed();
+	void AimingButtonReleased();
+
 private:
 	void PlayFireSound();
 
@@ -87,6 +91,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* BeamParticles;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	bool bAiming;
+
+	// Camera default field of view value
+	float DefaultCameraFOV;
+
+	// Field of view value when zooming
+	float ZoomedCameraFOV;
 
 public:
     /** Returns the CameraBoom subobject */

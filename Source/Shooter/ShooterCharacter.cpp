@@ -15,7 +15,10 @@
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
     BaseTurnRate(45.0f),
-    BaseLookUpRate(45.0f)
+    BaseLookUpRate(45.0f),
+    bAiming(false),
+    DefaultCameraFOV(0.0f),
+    ZoomedCameraFOV(60.0f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -48,7 +51,11 @@ AShooterCharacter::AShooterCharacter() :
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (FollowCamera)
+	{
+		DefaultCameraFOV = GetFollowCamera()->FieldOfView;
+	}
 }
 
 void AShooterCharacter::MoveForward(float Value)
@@ -89,6 +96,18 @@ void AShooterCharacter::FireWeapon()
 	PlayFireSound();
 	SendBullet();
 	PlayHipFireMontage();
+}
+
+void AShooterCharacter::AimingButtonPressed()
+{
+	bAiming = true;
+	GetFollowCamera()->SetFieldOfView(ZoomedCameraFOV);
+}
+
+void AShooterCharacter::AimingButtonReleased()
+{
+	bAiming = false;
+	GetFollowCamera()->SetFieldOfView(DefaultCameraFOV);
 }
 
 void AShooterCharacter::PlayFireSound()
@@ -226,14 +245,22 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
     check(InputComponent);
 
+	// Input bindings
+	// Movement
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AShooterCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpRate);
 
+	// Jump
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AShooterCharacter::StopJumping);
 
+	// Fire Weapon
 	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &AShooterCharacter::FireWeapon);
+
+	// Aim Weapon
+	PlayerInputComponent->BindAction("AimButton", IE_Pressed, this, &AShooterCharacter::AimingButtonPressed);
+	PlayerInputComponent->BindAction("AimButton", IE_Released, this, &AShooterCharacter::AimingButtonReleased);
 }
 
