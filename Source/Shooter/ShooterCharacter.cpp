@@ -18,7 +18,9 @@ AShooterCharacter::AShooterCharacter() :
     BaseLookUpRate(45.0f),
     bAiming(false),
     DefaultCameraFOV(0.0f),
-    ZoomedCameraFOV(60.0f)
+    ZoomedCameraFOV(40.0f),
+    CurrentCameraFOV(0.0f),
+    ZoomInterpSpeed(20.0f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -26,9 +28,9 @@ AShooterCharacter::AShooterCharacter() :
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f;
+	CameraBoom->TargetArmLength = 180.0f;
 	CameraBoom->bUsePawnControlRotation = true;
-	CameraBoom->SocketOffset = FVector(0.0f, 50.0f, 50.0f);
+	CameraBoom->SocketOffset = FVector(0.0f, 50.0f, 70.0f);
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -55,6 +57,7 @@ void AShooterCharacter::BeginPlay()
 	if (FollowCamera)
 	{
 		DefaultCameraFOV = GetFollowCamera()->FieldOfView;
+		CurrentCameraFOV = DefaultCameraFOV;
 	}
 }
 
@@ -101,13 +104,11 @@ void AShooterCharacter::FireWeapon()
 void AShooterCharacter::AimingButtonPressed()
 {
 	bAiming = true;
-	GetFollowCamera()->SetFieldOfView(ZoomedCameraFOV);
 }
 
 void AShooterCharacter::AimingButtonReleased()
 {
 	bAiming = false;
-	GetFollowCamera()->SetFieldOfView(DefaultCameraFOV);
 }
 
 void AShooterCharacter::PlayFireSound()
@@ -232,11 +233,32 @@ void AShooterCharacter::PlayHipFireMontage()
 	}
 }
 
+void AShooterCharacter::CameraInterpZoom(float DeltaTime)
+{
+	if (bAiming)
+	{
+		CurrentCameraFOV = FMath::FInterpTo(
+			CurrentCameraFOV,
+			ZoomedCameraFOV,
+			DeltaTime,
+			ZoomInterpSpeed);
+	} else
+	{
+		CurrentCameraFOV = FMath::FInterpTo(
+			CurrentCameraFOV,
+			DefaultCameraFOV,
+			DeltaTime,
+			ZoomInterpSpeed);
+	}
+	GetFollowCamera()->SetFieldOfView(CurrentCameraFOV);
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
+	CameraInterpZoom(DeltaTime);
 }
 
 // Called to bind functionality to input

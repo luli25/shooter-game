@@ -53,6 +53,8 @@ private:
 
 	void PlayHipFireMontage();
 
+	void CameraInterpZoom(float DeltaTime);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -100,6 +102,12 @@ private:
 
 	// Field of view value when zooming
 	float ZoomedCameraFOV;
+
+	// Current field of view in this frame
+	float CurrentCameraFOV;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	float ZoomInterpSpeed;
 
 public:
     /** Returns the CameraBoom subobject */
