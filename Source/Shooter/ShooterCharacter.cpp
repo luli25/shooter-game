@@ -20,7 +20,16 @@ AShooterCharacter::AShooterCharacter() :
     DefaultCameraFOV(0.0f),
     ZoomedCameraFOV(40.0f),
     CurrentCameraFOV(0.0f),
-    ZoomInterpSpeed(20.0f)
+    ZoomInterpSpeed(20.0f),
+
+	CrosshairSpreadMultiplier(0.0f),
+	CrosshairVelocityFactor(0.0f),
+	CrosshairInAirFactor(0.0f),
+	CrosshairAimFactor(0.0f),
+	CrosshairShootingFactor(0.0f),
+
+    ShootTimeDuration(0.05f),
+	bIsFiringBullet(false)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -99,6 +108,7 @@ void AShooterCharacter::FireWeapon()
 	PlayFireSound();
 	SendBullet();
 	PlayHipFireMontage();
+	StartCrosshairBulletFire();
 }
 
 void AShooterCharacter::AimingButtonPressed()
@@ -171,7 +181,6 @@ bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, 
 	}
 
 	FVector2D CrosshairLocation(ViewportSize.X / 2, ViewportSize.Y / 2);
-	CrosshairLocation.Y -= 20.0f;
 
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
@@ -264,8 +273,60 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 		WalkSpeedRange,
 		VelocityMultiplierRange,
 		Velocity.Size());
+
+	// Calculate crosshair in air factor
+	if (GetCharacterMovement()->IsFalling())
+	{
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor,
+			2.25f,
+			DeltaTime,
+			2.25f);
+	}
+	else
+	{
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor,
+			0.0f,
+			DeltaTime,
+			30.0f);
+	}
+
+	// Calculate crosshair aim factor
+	if (bAiming)
+	{
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor,
+			-0.6f,
+			DeltaTime,
+			2.25f);
+	}
+	else
+	{
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor,
+			0.0f,
+			DeltaTime,
+			30.0f);
+	}
+
+	// Calculate crosshair shooting factor
+	if (bIsFiringBullet)
+	{
+		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor,
+				0.3f,
+				DeltaTime,
+				60.0f);
+	}
+	else
+	{
+		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor,
+			0.0f,
+			DeltaTime,
+			60.0f);
+	}
 	
-	CrosshairSpreadMultiplier = 0.5f + CrosshairVelocityFactor;
+	
+	CrosshairSpreadMultiplier = 0.5f + CrosshairVelocityFactor +
+		CrosshairInAirFactor +
+			CrosshairAimFactor +
+				CrosshairShootingFactor;
 }
 
 // Called every frame
@@ -305,5 +366,21 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 float AShooterCharacter::GetCrosshairSpreadMultiplier() const
 {
 	return CrosshairSpreadMultiplier;
+}
+
+void AShooterCharacter::StartCrosshairBulletFire()
+{
+	bIsFiringBullet = true;
+	
+	GetWorldTimerManager().SetTimer(
+		CrosshairShootTimer,
+		this,
+		&AShooterCharacter::FinishCrosshairBulletFire,
+		ShootTimeDuration);
+}
+
+void AShooterCharacter::FinishCrosshairBulletFire()
+{
+	bIsFiringBullet = false;
 }
 

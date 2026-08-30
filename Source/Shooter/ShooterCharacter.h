@@ -56,6 +56,11 @@ private:
 	void CameraInterpZoom(float DeltaTime);
 
 	void CalculateCrosshairSpread(float DeltaTime);
+	
+	void StartCrosshairBulletFire();
+
+	UFUNCTION()
+	void FinishCrosshairBulletFire();
 
 public:	
 	// Called every frame
@@ -125,6 +130,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Crosshairs, meta= (AllowPrivateAccess = "true"))
 	float CrosshairShootingFactor;
+
+	float ShootTimeDuration;
+	bool bIsFiringBullet;
+	FTimerHandle CrosshairShootTimer;
 
 public:
     /** Returns the CameraBoom subobject */
