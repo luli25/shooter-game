@@ -44,6 +44,14 @@ protected:
 	void AimingButtonPressed();
 	void AimingButtonReleased();
 
+	void FireButtonPressed();
+	void FireButtonReleased();
+
+	void StartFireTimer();
+
+	UFUNCTION()
+	void AutoFireReset();
+
 private:
 	void PlayFireSound();
 
@@ -134,6 +142,11 @@ private:
 	float ShootTimeDuration;
 	bool bIsFiringBullet;
 	FTimerHandle CrosshairShootTimer;
+
+	bool bFireButtonPressed;
+	bool bShouldFire;
+	float AutomaticFireRate;
+	FTimerHandle AutoFireTimer;
 
 public:
     /** Returns the CameraBoom subobject */
